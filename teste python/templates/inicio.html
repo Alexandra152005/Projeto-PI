@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='inicio.css') }}">
+    <title>Projeto Pi</title>
+</head>
+<body>
+    <header>
+        <div title="logotipo">
+            <img src="{{ url_for('static', filename='../static/images/carro.png') }}" alt="carro">
+        </div>
+        <ul>
+            <a href="{{ url_for('login') }}"><li>Login</li></a>
+            <a href="{{ url_for('cadastro') }}"><li class="cadastro">Cadastre-se</div></li></a>
+        </ul>
+    </header>
+    <main>
+        <div class="texto">
+            <h1>Encontre<br>seu caminho aqui!<br></h1>
+            <form class="formulario" method="POST" action="{{ url_for('buscar_rota') }}">
+                <div class="campo-sugestao">
+                    <input type="text" id="input-inicio" placeholder="Início" name="inicio" autocomplete="off" required>
+                    <div id="sugestoes-inicio" class="sugestoes-container"></div>
+                </div>
+                <div class="campo-sugestao">
+                    <input type="text" id="input-destino" placeholder="Destino" name="destino" autocomplete="off" required>
+                    <div id="sugestoes-destino" class="sugestoes-container"></div>
+                </div>
+                <input type="submit" class="procurar" value="Procurar">
+            </form>
+            <div id="suggestions"></div> <!-- Caixa de sugestões -->
+        </div>
+        <div class="imagem">
+            <img src="{{ url_for('static', filename='../static/images/imagem carro.png') }}" height="500" width="600px" alt="carro">
+        </div>
+    </main>
+
+    <script>
+document.addEventListener("DOMContentLoaded", function() {
+    const campos = [
+        { inputId: "input-inicio", sugestoesId: "sugestoes-inicio" },
+        { inputId: "input-destino", sugestoesId: "sugestoes-destino" }
+    ];
+
+    campos.forEach(({ inputId, sugestoesId }) => {
+        const input = document.getElementById(inputId);
+        const sugestoesDiv = document.getElementById(sugestoesId);
+
+        input.addEventListener("input", function() {
+            const query = input.value.trim();
+            if (query.length < 2) {
+                sugestoesDiv.innerHTML = "";
+                return;
+            }
+
+            fetch(`/location_suggestions?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    sugestoesDiv.innerHTML = "";
+                    data.forEach(local => {
+                        const item = document.createElement("div");
+                        item.className = "sugestao";
+                        item.textContent = local.display_name;
+                        item.addEventListener("click", () => {
+                            input.value = local.display_name;
+                            sugestoesDiv.innerHTML = "";
+                        });
+                        sugestoesDiv.appendChild(item);
+                    });
+                })
+                .catch(error => {
+                    console.error("Erro ao buscar sugestões:", error);
+                });
+        });
+
+        document.addEventListener("click", function(e) {
+            if (!e.target.closest(".campo-sugestao")) {
+                sugestoesDiv.innerHTML = "";
+            }
+        });
+    });
+});
+</script>
+</body>
